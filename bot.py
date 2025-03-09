@@ -108,3 +108,6 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+if __name__ == "__main__":
+    # This will run when the script is executed directly
+    bot.run_polling()  # or any function to start your bot
