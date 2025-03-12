@@ -1,16 +1,17 @@
-from aiogram import Bot, Dispatcher, types
-from aiogram.types import FSInputFile
-from aiogram.types import Update
-from fastapi import FastAPI, Request
-import asyncio
 import cv2
 import numpy as np
+import asyncio
 import os
+from aiogram import Bot, Dispatcher, types
+from aiogram.types import FSInputFile, Update
+from fastapi import FastAPI, Request
+import uvicorn
 
+# Replace this with your Bot Token from BotFather
 BOT_TOKEN = "7787117081:AAFCc9UNnL_h9j4MkyM3QvjT_90iVvcpr8E"
 WEBHOOK_URL = "https://your-heroku-app.herokuapp.com/webhook"
 
-# Create bot and dispatcher
+# Create a bot instance
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 app = FastAPI()
@@ -31,21 +32,21 @@ async def process_images(user_id):
 
     # Convert model image to HSV to detect green screen
     hsv = cv2.cvtColor(model_image, cv2.COLOR_BGR2HSV)
-    lower_green = np.array([35, 40, 40])
+    lower_green = np.array([35, 40, 40])  # Adjust to detect green screen accurately
     upper_green = np.array([85, 255, 255])
     mask = cv2.inRange(hsv, lower_green, upper_green)
 
     # Find contours of the green area (screen)
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     if not contours:
-        return None
+        return None  # No green screen detected
 
     # Find the largest contour (assuming it's the screen)
     screen_contour = max(contours, key=cv2.contourArea)
     screen_pts = cv2.approxPolyDP(screen_contour, 0.02 * cv2.arcLength(screen_contour, True), True)
 
     if len(screen_pts) != 4:
-        return None
+        return None  # Ensure it's a quadrilateral
 
     screen_pts = np.float32([point[0] for point in screen_pts])
 
@@ -117,10 +118,10 @@ async def on_startup():
     await bot.set_webhook(WEBHOOK_URL)
 
 async def on_shutdown():
-    """ Remove webhook on shutdown """
+    """ Properly close the bot session on shutdown """
+    await bot.session.close()
     await bot.delete_webhook()
 
 if __name__ == "__main__":
-    import uvicorn
     asyncio.run(on_startup())
     uvicorn.run(app, host="0.0.0.0", port=5000)
