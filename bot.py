@@ -75,47 +75,45 @@ async def process_images(user_id):
 
     return output_path
 
-@dp.message(Command("start"))
-async def start_command(message: types.Message):
-    """ Command handler to check if bot is running """
-    await message.reply("✅ Bot is online and ready to process images! Send me a photo.")
-
 @dp.message()
-async def handle_photo(message: types.Message):
-    """ Handles images sent by the user """
+async def message_handler(message: types.Message):
+    """ Handles all text and photo messages """
     user_id = message.from_user.id
 
-    # If message contains no photo, ignore it
-    if not message.photo:
-        return
-
-    photo = message.photo[-1]  # Get the highest resolution version
-
-    # Download the image
-    file = await bot.get_file(photo.file_id)
-    file_path = file.file_path
-    save_path = f"{user_id}_{len(user_images.get(user_id, []))}.jpg"
-    await bot.download_file(file_path, save_path)
-
-    # Store the image path
-    if user_id not in user_images:
-        user_images[user_id] = []
-    user_images[user_id].append(save_path)
-
-    # Check if we have both images
-    if len(user_images[user_id]) == 2:
-        await message.reply("Processing the images... please wait.")
-        output_image = await process_images(user_id)
-
-        if output_image and os.path.exists(output_image):
-            # Send the processed image back
-            await bot.send_photo(user_id, FSInputFile(output_image))
-            user_images[user_id] = []  # Clear stored images after processing
+    if message.text:
+        if message.text == "/start":
+            await message.reply("✅ Bot is online and ready to process images! Send me a photo.")
         else:
-            await message.reply("Something went wrong. Please try again.")
+            await message.reply("I can only process images. Please send me a photo.")
 
-    else:
-        await message.reply("Now send me the second image (chat screenshot).")
+    elif message.photo:
+        photo = message.photo[-1]  # Get the highest resolution version
+
+        # Download the image
+        file = await bot.get_file(photo.file_id)
+        file_path = file.file_path
+        save_path = f"{user_id}_{len(user_images.get(user_id, []))}.jpg"
+        await bot.download_file(file_path, save_path)
+
+        # Store the image path
+        if user_id not in user_images:
+            user_images[user_id] = []
+        user_images[user_id].append(save_path)
+
+        # Check if we have both images
+        if len(user_images[user_id]) == 2:
+            await message.reply("Processing the images... please wait.")
+            output_image = await process_images(user_id)
+
+            if output_image and os.path.exists(output_image):
+                # Send the processed image back
+                await bot.send_photo(user_id, FSInputFile(output_image))
+                user_images[user_id] = []  # Clear stored images after processing
+            else:
+                await message.reply("Something went wrong. Please try again.")
+
+        else:
+            await message.reply("Now send me the second image (chat screenshot).")
 
 @app.post("/webhook")
 async def telegram_webhook(request: Request):
