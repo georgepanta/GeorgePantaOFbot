@@ -74,7 +74,7 @@ async def process_images(user_id):
 @dp.message(Command("start"))
 async def start_command(message: types.Message):
     """ Respond to /start command """
-    await message.reply("✅ Send FIRST the models pic.")
+    await message.reply("✅ 1st models pic, wait 3 sec and send 2nd pic")
 
 @dp.message()
 async def handle_photo(message: types.Message):
@@ -98,8 +98,6 @@ async def handle_photo(message: types.Message):
         user_images[user_id] = []
     user_images[user_id].append(save_path)
 
-    print(f"User {user_id} has {len(user_images[user_id])} images stored.")  # Debugging line
-
     # Check if we have both images
     if len(user_images[user_id]) == 2:
         await message.reply("Processing the images... please wait.")
@@ -113,7 +111,10 @@ async def handle_photo(message: types.Message):
             await message.reply("Something went wrong. Please try again.")
 
     else:
-        await message.reply("Now send me the second image (chat screenshot).")
+        await message.reply("Please wait 3 seconds before sending the screenshot.")
+
+    # Add delay of 3 seconds before processing
+    await asyncio.sleep(3)
 
 async def main():
     """ Starts the bot """
