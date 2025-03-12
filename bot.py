@@ -109,12 +109,12 @@ async def handle_photo(message: types.Message):
             user_images[user_id] = []  # Clear stored images after processing
         else:
             await message.reply("Something went wrong. Please try again.")
-else:
+    else:
         await message.reply("Now send me the second image (chat screenshot).")
 
 async def main():
     """ Starts the bot """
     await dp.start_polling(bot)
 
-if name == "__main__":
+if __name__ == "__main__":
     asyncio.run(main())
