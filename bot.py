@@ -8,7 +8,7 @@ from fastapi import FastAPI, Request
 import uvicorn
 
 # Bot Token (Directly in Code)
-BOT_TOKEN = "7787117081:AAFCc9UNnL_h9j4MkyM3QvjT_90iVvcpr8E"
+BOT_TOKEN = "8087593136:AAEh6JURy9dAjd16YtcLmkNJ5HDyo7Lc8gQ"
 WEBHOOK_URL = "https://your-heroku-app.herokuapp.com/webhook"
 
 # Create bot and dispatcher
