@@ -3,19 +3,14 @@ import numpy as np
 import asyncio
 import os
 from aiogram import Bot, Dispatcher, types
-from aiogram.types import FSInputFile, Update
-from aiogram.filters import Command
-from fastapi import FastAPI, Request
-import uvicorn
+from aiogram.types import FSInputFile
 
-# Bot Token
+# Replace this with your Bot Token from BotFather
 BOT_TOKEN = "7950424139:AAFY1tBMt7oRfmOxZq-sQeQRzzfgNctqqqA"
-WEBHOOK_URL = "https://georgepantaofbot-aefbdf25db1.herokuapp.com/webhook"
 
 # Create bot and dispatcher
 bot = Bot(token=BOT_TOKEN)
-dp = Dispatcher(bot=bot)  # ✅ Fix: Properly initialize Dispatcher
-app = FastAPI()
+dp = Dispatcher(bot)  # ✅ Corrected: Dispatcher needs the bot instance
 
 # Dictionary to store user images temporarily
 user_images = {}
@@ -33,21 +28,21 @@ async def process_images(user_id):
 
     # Convert model image to HSV to detect green screen
     hsv = cv2.cvtColor(model_image, cv2.COLOR_BGR2HSV)
-    lower_green = np.array([35, 40, 40])
+    lower_green = np.array([35, 40, 40])  # Adjust to detect green screen accurately
     upper_green = np.array([85, 255, 255])
     mask = cv2.inRange(hsv, lower_green, upper_green)
 
     # Find contours of the green area (screen)
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     if not contours:
-        return None
+        return None  # No green screen detected
 
     # Find the largest contour (assuming it's the screen)
     screen_contour = max(contours, key=cv2.contourArea)
     screen_pts = cv2.approxPolyDP(screen_contour, 0.02 * cv2.arcLength(screen_contour, True), True)
 
     if len(screen_pts) != 4:
-        return None
+        return None  # Ensure it's a quadrilateral
 
     screen_pts = np.float32([point[0] for point in screen_pts])
 
@@ -75,64 +70,51 @@ async def process_images(user_id):
 
     return output_path
 
-@dp.message(Command("start"))
-async def start_command(message: types.Message):
-    """ Command handler to check if bot is running """
-    await message.reply("✅ Bot is online and ready to process images! Send me a photo.")
-
 @dp.message()
-async def message_handler(message: types.Message):
-    """ Handles all text and photo messages """
+async def handle_photo(message: types.Message):
+    """ Handles images sent by the user """
     user_id = message.from_user.id
 
-    if message.text:
-        await message.reply("I can only process images. Please send me a photo.")
+    # Handle /start command
+    if message.text and message.text == "/start":
+        await message.reply("✅ Bot is online and ready to process images! Send me a photo.")
+        return
 
-    elif message.photo:
-        photo = message.photo[-1]  # Get the highest resolution version
+    # Ignore non-photo messages
+    if not message.photo:
+        return
 
-        # Download the image
-        file = await bot.get_file(photo.file_id)
-        file_path = file.file_path
-        save_path = f"{user_id}_{len(user_images.get(user_id, []))}.jpg"
-        await bot.download_file(file_path, save_path)
+    photo = message.photo[-1]  # Get the highest resolution version
 
-        # Store the image path
-        if user_id not in user_images:
-            user_images[user_id] = []
-        user_images[user_id].append(save_path)
+    # Download the image
+    file = await bot.get_file(photo.file_id)
+    file_path = file.file_path
+    save_path = f"{user_id}_{len(user_images.get(user_id, []))}.jpg"
+    await bot.download_file(file_path, save_path)
 
-        # Check if we have both images
-        if len(user_images[user_id]) == 2:
-            await message.reply("Processing the images... please wait.")
-            output_image = await process_images(user_id)
+    # Store the image path
+    if user_id not in user_images:
+        user_images[user_id] = []
+    user_images[user_id].append(save_path)
 
-            if output_image and os.path.exists(output_image):
-                # Send the processed image back
-                await bot.send_photo(user_id, FSInputFile(output_image))
-                user_images[user_id] = []  # Clear stored images after processing
-            else:
-                await message.reply("Something went wrong. Please try again.")
+    # Check if we have both images
+    if len(user_images[user_id]) == 2:
+        await message.reply("Processing the images... please wait.")
+        output_image = await process_images(user_id)
 
+        if output_image and os.path.exists(output_image):
+            # Send the processed image back
+            await bot.send_photo(user_id, FSInputFile(output_image))
+            user_images[user_id] = []  # Clear stored images after processing
         else:
-            await message.reply("Now send me the second image (chat screenshot).")
+            await message.reply("Something went wrong. Please try again.")
 
-@app.post("/webhook")
-async def telegram_webhook(request: Request):
-    """ Handle incoming Telegram updates """
-    update = Update(**await request.json())
-    await dp.process_update(update)  # ✅ Fix: Properly process the update
-    return {"ok": True}
+    else:
+        await message.reply("Now send me the second image (chat screenshot).")
 
-async def on_startup():
-    """ Set webhook on startup """
-    await bot.set_webhook(WEBHOOK_URL)
-
-async def on_shutdown():
-    """ Properly close the bot session on shutdown """
-    await bot.session.close()
-    await bot.delete_webhook()
+async def main():
+    """ Starts the bot """
+    await dp.start_polling()  # ✅ Fixed: No need to pass `bot` here
 
 if __name__ == "__main__":
-    asyncio.run(on_startup())
-    uvicorn.run(app, host="0.0.0.0", port=5000)
+    asyncio.run(main())  # ✅ Fixed: Corrected syntax
