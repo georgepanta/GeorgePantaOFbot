@@ -74,7 +74,7 @@ async def process_images(user_id):
 @dp.message(Command("start"))
 async def start_command(message: types.Message):
     """ Respond to /start command """
-    await message.reply("✅ Scam bot is online and ready to scam someone with a fake pic ! Send me a photo to scam him and make him believe ti's the model.")
+    await message.reply("✅ Send FIRST the models pic.")
 
 @dp.message()
 async def handle_photo(message: types.Message):
@@ -97,6 +97,8 @@ async def handle_photo(message: types.Message):
     if user_id not in user_images:
         user_images[user_id] = []
     user_images[user_id].append(save_path)
+
+    print(f"User {user_id} has {len(user_images[user_id])} images stored.")  # Debugging line
 
     # Check if we have both images
     if len(user_images[user_id]) == 2:
