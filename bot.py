@@ -4,13 +4,13 @@ import asyncio
 import os
 from aiogram import Bot, Dispatcher, types
 from aiogram.types import FSInputFile, Update
+from aiogram.filters import Command
 from fastapi import FastAPI, Request
 import uvicorn
 
-# Bot Token (Directly in Code)
+# Bot Token
 BOT_TOKEN = "7592297710:AAEhGzPJnfK5fQhakQYQUzVOaTtwpvYNodc"
 WEBHOOK_URL = "https://georgepantaofbot-aefbdf25db1.herokuapp.com/webhook"
-
 
 # Create bot and dispatcher
 bot = Bot(token=BOT_TOKEN)
@@ -75,10 +75,20 @@ async def process_images(user_id):
 
     return output_path
 
+@dp.message(Command("start"))
+async def start_command(message: types.Message):
+    """ Command handler to check if bot is running """
+    await message.reply("✅ Bot is online and ready to process images! Send me a photo.")
+
 @dp.message()
 async def handle_photo(message: types.Message):
     """ Handles images sent by the user """
     user_id = message.from_user.id
+
+    # If message contains no photo, ignore it
+    if not message.photo:
+        return
+
     photo = message.photo[-1]  # Get the highest resolution version
 
     # Download the image
