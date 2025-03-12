@@ -9,6 +9,7 @@ from aiogram.types import FSInputFile
 from aiogram.filters import Command
 from collections import defaultdict
 from PIL import Image
+from aiogram.utils.exceptions import Throttled
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -153,9 +154,24 @@ async def handle_photo(message: types.Message):
     else:
         await message.reply("Now wait 3 seconds before sending the screenshot.")
 
+# Auto-restart mechanism to avoid failure if overloaded
+async def auto_restart():
+    while True:
+        # Check if bot has been down for any reason and restart it
+        try:
+            await bot.get_me()
+            logging.info("Bot is online.")
+        except Exception as e:
+            logging.error(f"Error: {e}. Restarting bot.")
+            # Here you could implement any mechanism like an auto-restart after a failure.
+            # You can add a restart script on your server or restart dynos on Heroku, etc.
+        await asyncio.sleep(300)  # Check every 5 minutes
+
 # Main function to start the bot
 async def main():
-    await dp.start_polling(bot)
+    task1 = asyncio.create_task(dp.start_polling(bot))
+    task2 = asyncio.create_task(auto_restart())
+    await asyncio.gather(task1, task2)
 
 if __name__ == "__main__":
     asyncio.run(main())
