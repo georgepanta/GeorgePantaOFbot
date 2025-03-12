@@ -1,3 +1,4 @@
-git add Aptfile
-git commit -m "Added system dependencies for aiohttp"
-git push origin main
+libssl-dev
+gcc
+python3-dev
+build-essential
