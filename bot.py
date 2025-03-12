@@ -9,7 +9,8 @@ import uvicorn
 
 # Bot Token (Directly in Code)
 BOT_TOKEN = "7592297710:AAEhGzPJnfK5fQhakQYQUzVOaTtwpvYNodc"
-WEBHOOK_URL = "https://your-heroku-app.herokuapp.com/webhook"
+WEBHOOK_URL = "https://georgepantaofbot-aefbdf25db1.herokuapp.com/webhook"
+
 
 # Create bot and dispatcher
 bot = Bot(token=BOT_TOKEN)
