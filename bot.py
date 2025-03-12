@@ -7,7 +7,7 @@ import cv2
 import numpy as np
 import os
 
-BOT_TOKEN = "YOUR_BOT_TOKEN"
+BOT_TOKEN = "7787117081:AAFCc9UNnL_h9j4MkyM3QvjT_90iVvcpr8E"
 WEBHOOK_URL = "https://your-heroku-app.herokuapp.com/webhook"
 
 # Create bot and dispatcher
