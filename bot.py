@@ -14,7 +14,7 @@ WEBHOOK_URL = "https://georgepantaofbot-aefbdf25db1.herokuapp.com/webhook"
 
 # Create bot and dispatcher
 bot = Bot(token=BOT_TOKEN)
-dp = Dispatcher()
+dp = Dispatcher(bot=bot)  # ✅ Fix: Properly initialize Dispatcher
 app = FastAPI()
 
 # Dictionary to store user images temporarily
@@ -121,7 +121,7 @@ async def handle_photo(message: types.Message):
 async def telegram_webhook(request: Request):
     """ Handle incoming Telegram updates """
     update = Update(**await request.json())
-    await dp.process_update(update)
+    await dp.feed_update(update)  # ✅ Fix: Properly process the update
     return {"ok": True}
 
 async def on_startup():
