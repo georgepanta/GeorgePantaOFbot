@@ -102,6 +102,10 @@ async def handle_photo(message: types.Message):
     # Check if we have both images
     if len(user_images[user_id]) == 2:
         await message.reply("Processing the images... please wait.")
+        
+        # Adding the 3 seconds delay before processing
+        await asyncio.sleep(3)  # Delay for 3 seconds
+        
         output_image = await process_images(user_id)
 
         if output_image and os.path.exists(output_image):
