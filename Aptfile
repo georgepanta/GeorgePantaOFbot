@@ -2,3 +2,4 @@ libssl-dev
 gcc
 python3-dev
 build-essential
+libpython3-dev
