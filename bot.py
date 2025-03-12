@@ -75,16 +75,18 @@ async def process_images(user_id):
 
     return output_path
 
+@dp.message(Command("start"))
+async def start_command(message: types.Message):
+    """ Command handler to check if bot is running """
+    await message.reply("✅ Bot is online and ready to process images! Send me a photo.")
+
 @dp.message()
 async def message_handler(message: types.Message):
     """ Handles all text and photo messages """
     user_id = message.from_user.id
 
     if message.text:
-        if message.text == "/start":
-            await message.reply("✅ Bot is online and ready to process images! Send me a photo.")
-        else:
-            await message.reply("I can only process images. Please send me a photo.")
+        await message.reply("I can only process images. Please send me a photo.")
 
     elif message.photo:
         photo = message.photo[-1]  # Get the highest resolution version
@@ -119,7 +121,7 @@ async def message_handler(message: types.Message):
 async def telegram_webhook(request: Request):
     """ Handle incoming Telegram updates """
     update = Update(**await request.json())
-    await dp.feed_update(update)  # ✅ Fix: Properly process the update
+    await dp.process_update(update)  # ✅ Fix: Properly process the update
     return {"ok": True}
 
 async def on_startup():
