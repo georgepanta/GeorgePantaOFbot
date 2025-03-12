@@ -7,11 +7,11 @@ from aiogram.types import FSInputFile, Update
 from fastapi import FastAPI, Request
 import uvicorn
 
-# Replace this with your Bot Token from BotFather
-BOT_TOKEN = "7787117081:AAFCc9UNnL_h9j4MkyM3QvjT_90iVvcpr8E"
+# Bot Token (Directly in Code)
+BOT_TOKEN = "7787117081:AAFCc9UNnL_h9J4Mx9WyJt_9aIVcqrBE"
 WEBHOOK_URL = "https://your-heroku-app.herokuapp.com/webhook"
 
-# Create a bot instance
+# Create bot and dispatcher
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 app = FastAPI()
@@ -32,21 +32,21 @@ async def process_images(user_id):
 
     # Convert model image to HSV to detect green screen
     hsv = cv2.cvtColor(model_image, cv2.COLOR_BGR2HSV)
-    lower_green = np.array([35, 40, 40])  # Adjust to detect green screen accurately
+    lower_green = np.array([35, 40, 40])
     upper_green = np.array([85, 255, 255])
     mask = cv2.inRange(hsv, lower_green, upper_green)
 
     # Find contours of the green area (screen)
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     if not contours:
-        return None  # No green screen detected
+        return None
 
     # Find the largest contour (assuming it's the screen)
     screen_contour = max(contours, key=cv2.contourArea)
     screen_pts = cv2.approxPolyDP(screen_contour, 0.02 * cv2.arcLength(screen_contour, True), True)
 
     if len(screen_pts) != 4:
-        return None  # Ensure it's a quadrilateral
+        return None
 
     screen_pts = np.float32([point[0] for point in screen_pts])
 
