@@ -80,6 +80,7 @@ async def start_command(message: types.Message):
 async def handle_photo(message: types.Message):
     """ Handles images sent by the user """
     user_id = message.from_user.id
+    print(f"Received message from user ID: {user_id}")  # Added for debugging
 
     # If message contains no photo, ignore it
     if not message.photo:
