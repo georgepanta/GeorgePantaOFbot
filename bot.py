@@ -74,7 +74,7 @@ async def process_images(user_id):
 @dp.message(Command("start"))
 async def start_command(message: types.Message):
     """ Respond to /start command """
-    await message.reply("✅ Bot is online and ready to process images! Send me a photo.")
+    await message.reply("✅ Scam bot is online and ready to scam someone with a fake pic ! Send me a photo to scam him and make him believe ti's the model.")
 
 @dp.message()
 async def handle_photo(message: types.Message):
