@@ -2,12 +2,20 @@ import cv2
 import numpy as np
 import asyncio
 import os
+import time
+import logging
 from aiogram import Bot, Dispatcher, types
 from aiogram.types import FSInputFile
 from aiogram.filters import Command
+from collections import defaultdict
+from PIL import Image
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
 
 # Replace with your Telegram Bot Token
 BOT_TOKEN = "7950424139:AAFY1tBMt7oRfmOxZq-sQeQRzzfgNctqqqA"
+WEBHOOK_URL = "https://georgepantaofbot-aefbdf25db1.herokuapp.com/webhook"
 
 # Initialize bot and dispatcher
 bot = Bot(token=BOT_TOKEN)
@@ -15,13 +23,34 @@ dp = Dispatcher()
 
 # Dictionary to store user images temporarily
 user_images = {}
+user_last_message = defaultdict(int)  # Rate limiting for users
 
+# Resize image if needed (you can customize the size)
+def resize_image(image_path, width=800, height=600):
+    img = cv2.imread(image_path)
+    img_resized = cv2.resize(img, (width, height))
+    cv2.imwrite(image_path, img_resized)
+
+# Function to validate images
+def is_valid_image(image_path):
+    try:
+        with Image.open(image_path) as img:
+            img.verify()  # Verify if the image is corrupted
+        return True
+    except (IOError, SyntaxError):
+        return False
+
+# Image processing function
 async def process_images(user_id):
     """ Process the model image and chat screenshot """
     if user_id not in user_images or len(user_images[user_id]) < 2:
         return None
 
     model_image_path, chat_screenshot_path = user_images[user_id]
+
+    # Resize images before processing
+    resize_image(model_image_path)
+    resize_image(chat_screenshot_path)
 
     # Load images
     model_image = cv2.imread(model_image_path)
@@ -71,15 +100,23 @@ async def process_images(user_id):
 
     return output_path
 
+# Command: /start
 @dp.message(Command("start"))
 async def start_command(message: types.Message):
     """ Respond to /start command """
-    await message.reply("✅ 1st models pic, wait 3 sec and send 2nd pic")
+    await message.reply("✅ Bot is online and ready to process images! Send me a photo.")
 
-@dp.message()
+# Rate limiting: Ensure users don't spam the bot too fast
+rate_limit = 3  # seconds
 async def handle_photo(message: types.Message):
-    """ Handles images sent by the user """
     user_id = message.from_user.id
+    current_time = time.time()
+
+    if current_time - user_last_message[user_id] < rate_limit:
+        await message.reply("Please wait a moment before sending the next image.")
+        return
+
+    user_last_message[user_id] = current_time
 
     # If message contains no photo, ignore it
     if not message.photo:
@@ -98,6 +135,9 @@ async def handle_photo(message: types.Message):
         user_images[user_id] = []
     user_images[user_id].append(save_path)
 
+    # Log the number of images stored for the user
+    logging.info(f"Images stored for User ID {user_id}: {len(user_images[user_id])}")
+
     # Check if we have both images
     if len(user_images[user_id]) == 2:
         await message.reply("Processing the images... please wait.")
@@ -111,13 +151,10 @@ async def handle_photo(message: types.Message):
             await message.reply("Something went wrong. Please try again.")
 
     else:
-        await message.reply("Please wait 3 seconds before sending the screenshot.")
+        await message.reply("Now wait 3 seconds before sending the screenshot.")
 
-    # Add delay of 3 seconds before processing
-    await asyncio.sleep(3)
-
+# Main function to start the bot
 async def main():
-    """ Starts the bot """
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
