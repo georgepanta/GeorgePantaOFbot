@@ -9,7 +9,7 @@ from fastapi import FastAPI, Request
 import uvicorn
 
 # Bot Token
-BOT_TOKEN = "7592297710:AAEhGzPJnfK5fQhakQYQUzVOaTtwpvYNodc"
+BOT_TOKEN = "7787117081:AAFCc9UNnL_h9j4MkyM3QvjT_90iVvcpr8E"
 WEBHOOK_URL = "https://georgepantaofbot-aefbdf25db1.herokuapp.com/webhook"
 
 # Create bot and dispatcher
